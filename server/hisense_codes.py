@@ -56,9 +56,22 @@ HISENSE_COMMANDS: dict[str, int] = {
     "9":            0x08,
 
     # ── Streaming shortcuts ─────────────────────────────────────────────
+    # Verified on Hisense EN2A27H-class remotes:
     "netflix":      0x1E,
     "amazon":       0x4E,
     "youtube":      0x2E,
+
+    # !! UNVERIFIED — placeholder codes !!
+    # The original Hisense remote rarely has hard buttons for these apps.
+    # If they don't launch the app, capture the real code with a phone
+    # camera + IR learner app and update the byte below.
+    # Alternative: change the GUI handler to send Home → arrow keys → OK
+    # to navigate to the app tile instead of a single IR shot.
+    "itvx":         0x5E,
+    "iplayer":      0x6E,
+    "nowtv":        0x7E,
+    "freely":       0x8E,
+    "spotify":      0x9E,
 }
 
 # Buttons that support NEC repeat frames when held

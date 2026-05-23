@@ -144,6 +144,11 @@
     .stream-btn.netflix { background: #e50914; color: #fff; }
     .stream-btn.amazon  { background: #ff9900; color: #111; }
     .stream-btn.youtube { background: #ff0000; color: #fff; }
+    .stream-btn.itvx    { background: #f8c100; color: #111; }
+    .stream-btn.iplayer { background: #ec1e3e; color: #fff; }
+    .stream-btn.nowtv   { background: #00deb6; color: #001a14; }
+    .stream-btn.freely  { background: #5e60ce; color: #fff; }
+    .stream-btn.spotify { background: #1db954; color: #000; }
 
     /* ── Divider ──────────────────────────────────────────────────── */
     .divider { border: none; border-top: 1px solid #2e2e2e; margin: 2px 0; }
@@ -156,16 +161,87 @@
     }
     .user-badge span { color: #aaa; }
 
-    /* ── Status panel ─────────────────────────────────────────────── */
+    /* ── Status pill in remote header ────────────────────────────── */
+    .remote-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 0.65rem;
+      color: #bbb;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      letter-spacing: 0.3px;
+    }
+    .status-pill:hover { background: #2a2a2a; border-color: #444; }
+    .status-pill .pill-led {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #444;
+    }
+    .status-pill .pill-led.on  { background: #27ae60; box-shadow: 0 0 4px #27ae60aa; }
+    .status-pill .pill-led.off { background: #c0392b; box-shadow: 0 0 4px #c0392baa; }
+
+    /* ── Status modal ─────────────────────────────────────────────── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: #000c;
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      animation: fadeIn 0.15s ease-out;
+    }
+    .modal-backdrop.show { display: flex; }
+    @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ── Status panel (used inside the modal) ────────────────────── */
     .status-panel {
-      width: 280px;
+      width: min(420px, 92vw);
       background: #1a1a1a;
       border-radius: 16px;
-      padding: 12px 16px;
-      box-shadow: inset 0 1px 0 #ffffff10;
-      font-size: 0.78rem;
+      padding: 20px 24px;
+      box-shadow: 0 16px 48px #000c, inset 0 1px 0 #ffffff10;
+      font-size: 0.85rem;
       color: #bbb;
+      max-height: 86vh;
+      display: flex;
+      flex-direction: column;
     }
+    .status-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .status-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: #eee;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: 0 6px;
+      line-height: 1;
+    }
+    .close-btn:hover { color: #fff; }
+
     .status-row {
       display: flex;
       align-items: center;
@@ -187,38 +263,37 @@
     .status-divider {
       border: none;
       border-top: 1px solid #2a2a2a;
-      margin: 8px 0 6px;
+      margin: 12px 0 8px;
     }
     .status-title {
-      font-size: 0.68rem;
+      font-size: 0.7rem;
       letter-spacing: 1px;
       color: #666;
       text-transform: uppercase;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
     .history-list {
       list-style: none;
-      max-height: 220px;
+      max-height: 50vh;
       overflow-y: auto;
       font-family: 'Consolas', 'Courier New', monospace;
-      font-size: 0.72rem;
+      font-size: 0.75rem;
     }
     .history-list li {
       display: grid;
-      grid-template-columns: 56px 1fr auto;
-      gap: 6px;
-      padding: 3px 0;
+      grid-template-columns: 64px 1fr auto;
+      gap: 8px;
+      padding: 5px 0;
       border-bottom: 1px solid #ffffff08;
       align-items: baseline;
     }
     .history-list li:last-child { border-bottom: none; }
     .h-time  { color: #666; }
     .h-name  { color: #e8e8e8; }
-    .h-code  { color: #7fb0ff; }
     .h-proto {
       color: #888;
       background: #ffffff10;
-      padding: 1px 6px;
+      padding: 1px 7px;
       border-radius: 4px;
       font-size: 0.65rem;
       text-transform: uppercase;
@@ -227,13 +302,13 @@
     .h-proto.nec  { color: #ffc857; }
     .h-proto.rc5  { color: #b5e48c; }
     .h-proto.sony { color: #ff8fab; }
-    .history-empty { color: #555; text-align: center; padding: 8px 0; font-style: italic; }
+    .history-empty { color: #555; text-align: center; padding: 12px 0; font-style: italic; }
 
     .h-status {
       grid-column: 1 / -1;
-      font-size: 0.65rem;
+      font-size: 0.68rem;
       color: #555;
-      padding-left: 62px;
+      padding-left: 72px;
     }
     .h-status.transmitted { color: #27ae60; }
     .h-status.queued      { color: #f39c12; }
@@ -277,7 +352,13 @@
   <div class="user-badge">Signed in as <span id="user-email"></span></div>
 
   <div class="remote">
-    <div class="remote-title">Hisense</div>
+    <div class="remote-title">
+      <span>Hisense</span>
+      <button class="status-pill" id="status-pill" title="Show status">
+        <span class="pill-led" id="pill-led"></span>
+        <span id="pill-text">status</span>
+      </button>
+    </div>
 
     <!-- Row 1: Power / Source / Mute -->
     <div class="row spread">
@@ -288,11 +369,24 @@
 
     <hr class="divider" />
 
-    <!-- Row 2: Streaming shortcuts -->
+    <!-- Row 2a: Streaming shortcuts -->
     <div class="stream-row">
       <button class="stream-btn netflix" data-cmd="netflix">NETFLIX</button>
       <button class="stream-btn amazon"  data-cmd="amazon">prime</button>
       <button class="stream-btn youtube" data-cmd="youtube">▶ YouTube</button>
+    </div>
+
+    <!-- Row 2b: UK streaming shortcuts -->
+    <div class="stream-row">
+      <button class="stream-btn itvx"    data-cmd="itvx">ITVX</button>
+      <button class="stream-btn iplayer" data-cmd="iplayer">iPlayer</button>
+      <button class="stream-btn nowtv"   data-cmd="nowtv">NOW</button>
+    </div>
+
+    <!-- Row 2c: Other launchers -->
+    <div class="stream-row">
+      <button class="stream-btn freely"  data-cmd="freely">Freely</button>
+      <button class="stream-btn spotify" data-cmd="spotify">♪ Spotify</button>
     </div>
 
     <hr class="divider" />
@@ -340,24 +434,31 @@
     <div class="row"><div style="width:42px"></div><button class="btn small" data-cmd="0">0</button><div style="width:42px"></div></div>
   </div>
 
-  <!-- ── Status panel ──────────────────────────────────────────────── -->
-  <div class="status-panel">
-    <div class="status-row">
-      <span class="led" id="pico-led"></span>
-      <span class="label">Remote</span>
-      <span class="value" id="pico-state">checking…</span>
-    </div>
-    <div class="status-row">
-      <span class="label" style="margin-left:17px">Last poll</span>
-      <span class="value" id="pico-last">—</span>
-    </div>
+  <!-- ── Status modal ──────────────────────────────────────────────── -->
+  <div class="modal-backdrop" id="status-modal">
+    <div class="status-panel">
+      <div class="status-header">
+        <h2>Remote status</h2>
+        <button class="close-btn" id="status-close" aria-label="Close">×</button>
+      </div>
 
-    <hr class="status-divider" />
+      <div class="status-row">
+        <span class="led" id="pico-led"></span>
+        <span class="label">Pico</span>
+        <span class="value" id="pico-state">checking…</span>
+      </div>
+      <div class="status-row">
+        <span class="label" style="margin-left:17px">Last poll</span>
+        <span class="value" id="pico-last">—</span>
+      </div>
 
-    <div class="status-title">Recent commands</div>
-    <ul class="history-list" id="history-list">
-      <li class="history-empty">No commands yet</li>
-    </ul>
+      <hr class="status-divider" />
+
+      <div class="status-title">Recent commands</div>
+      <ul class="history-list" id="history-list">
+        <li class="history-empty">No commands yet</li>
+      </ul>
+    </div>
   </div>
 </div>
 
@@ -423,6 +524,7 @@
 
   // ── Status panel polling ────────────────────────────────────────────
   let _statusTimer = null;
+  let _modalOpen   = false;
 
   function fmtAgo(seconds) {
     if (seconds == null) return 'never';
@@ -461,11 +563,28 @@
       if (!res.ok) return;
       const data = await res.json();
 
-      // Pico status
       const pico = data.pico || {};
-      const led  = document.getElementById('pico-led');
-      const state= document.getElementById('pico-state');
-      const last = document.getElementById('pico-last');
+
+      // Always update the pill (small footprint, visible in remote header)
+      const pillLed  = document.getElementById('pill-led');
+      const pillText = document.getElementById('pill-text');
+      if (pico.connected) {
+        pillLed.className  = 'pill-led on';
+        pillText.textContent = 'online';
+      } else if (pico.last_seen) {
+        pillLed.className  = 'pill-led off';
+        pillText.textContent = 'offline';
+      } else {
+        pillLed.className  = 'pill-led';
+        pillText.textContent = 'waiting';
+      }
+
+      // Skip rendering the modal contents while closed
+      if (!_modalOpen) return;
+
+      const led   = document.getElementById('pico-led');
+      const state = document.getElementById('pico-state');
+      const last  = document.getElementById('pico-last');
 
       if (pico.connected) {
         led.className = 'led on';
@@ -482,7 +601,6 @@
       }
       last.textContent = fmtAgo(pico.seconds_since);
 
-      // History
       const ul = document.getElementById('history-list');
       const hist = data.history || [];
       if (hist.length === 0) {
@@ -505,8 +623,30 @@
   function startStatusPolling() {
     if (_statusTimer) return;
     refreshStatus();
-    _statusTimer = setInterval(refreshStatus, 2000);
+    _statusTimer = setInterval(refreshStatus, 3000);
   }
+
+  // ── Modal open/close ────────────────────────────────────────────────
+  function openStatusModal() {
+    _modalOpen = true;
+    document.getElementById('status-modal').classList.add('show');
+    refreshStatus();
+  }
+  function closeStatusModal() {
+    _modalOpen = false;
+    document.getElementById('status-modal').classList.remove('show');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('status-pill').addEventListener('click', openStatusModal);
+    document.getElementById('status-close').addEventListener('click', closeStatusModal);
+    document.getElementById('status-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'status-modal') closeStatusModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && _modalOpen) closeStatusModal();
+    });
+  });
 
   // ── Button click handler ────────────────────────────────────────────
   document.addEventListener('click', async (e) => {
