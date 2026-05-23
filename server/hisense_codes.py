@@ -1,83 +1,82 @@
 """
-Hisense TV NEC IR code table.
+Hisense TV NECx IR code table.
 
-Protocol:  NEC (38 kHz), address byte 0x00 (~address = 0xFF) for A6N/A6NTUK
-(2023+ UK Hisense). Older Smart TVs (EN2A27H etc) use 0x40 (~0xBF).
-NEC frame: address(8) | ~address(8) | command(8) | ~command(8), LSB-first.
+Protocol:  NEC-extended (38 kHz), 16-bit address 0x00BF.
+NECx frame: addr_low(8) | addr_high(8) | command(8) | ~command(8), LSB-first.
 
-!! MODEL-SPECIFIC DISCLAIMER !!
-These codes match common Hisense Smart TV remotes (e.g. EN2A27H, EN-83801 series).
-They may not work on all Hisense models.  If a button does not respond:
-  1. Point your original Hisense remote at a smartphone front camera (not all cameras
-     filter IR) and press the button — you will see the LED flash.
-  2. Use an IR learning app (e.g. "IR Remote" on Android) to capture the raw code.
-  3. Update the command byte below and re-run the server.
-  4. Alternatively, check https://www.remotecentral.com or the LIRC database for your
-     exact model number.
+Captured live from the original Hisense remote pointed at a Grove IR receiver
+on a Raspberry Pi Pico (see pico/scripts/ircapture.py).  Verified for the
+Hisense 85A6NTUK (UK A6N series).  Older Hisense models (EN2A27H etc) used
+NEC1 with 8-bit address 0x40 — they are NOT compatible with this table.
+
+If a button does not respond, recapture it:
+    mpremote connect auto run pico/scripts/ircapture.py
+and update the command byte below.
 """
 
-HISENSE_ADDRESS = 0x00   # NEC device address for Hisense A6N/A6NTUK
-                         # Use 0x40 instead for older Hisense EN2A27H-class remotes.
+# NECx 16-bit address used by all Hisense buttons except branded app launchers
+HISENSE_ADDRESS = 0x00BF
 
-# Power command differs per generation:
-#   A6N / A6NTUK (2023+): 0x12
-#   EN2A27H older:        0x48
+# Some app-launch buttons on a Hisense remote actually emit a totally different
+# protocol/address pair (so they can talk to the smart hub regardless of TV
+# vendor).  Each special button overrides protocol + address from the global.
+SPECIAL: dict[str, dict] = {
+    # Captured live: Netflix on the Hisense clone remote
+    "netflix": {"protocol": "nec", "address": 0x04, "command": 0x56},
+}
 
-# Map of button name → NEC command byte.
-# Each command byte is unique within this table.
+# Map of button name → NEC command byte (all on address 0x00BF unless in SPECIAL).
+# CONFIRMED   = captured live with labelled press
+# UNVERIFIED  = inherited from a guess table; recapture before relying on it
 HISENSE_COMMANDS: dict[str, int] = {
     # ── Power / system ─────────────────────────────────────────────────
-    "power":        0x12,
-    "mute":         0xF0,
-    "source":       0xD0,
+    "power":        0x0D,   # CONFIRMED
+    "mute":         0xF0,   # UNVERIFIED
+    "source":       0xD0,   # UNVERIFIED
 
     # ── Volume ─────────────────────────────────────────────────────────
-    "vol_up":       0x50,
-    "vol_down":     0x57,
+    "vol_up":       0x44,   # CONFIRMED
+    "vol_down":     0x43,   # CONFIRMED
 
     # ── Channel ────────────────────────────────────────────────────────
-    "ch_up":        0x00,
-    "ch_down":      0x01,
+    "ch_up":        0x00,   # UNVERIFIED
+    "ch_down":      0x01,   # UNVERIFIED
 
     # ── Navigation pad ─────────────────────────────────────────────────
-    "up":           0x60,
-    "down":         0xA0,
-    "left":         0x10,
-    "right":        0x90,
-    "ok":           0x20,
-    "back":         0x70,
-    "home":         0x30,
-    "menu":         0x40,
+    # Captured 0x2D twice (probably home or back), then 0x16/0x17/0x19/0x18 in
+    # a cluster — likely the arrow ring.  Treat as best-guess until recapture.
+    "up":           0x16,   # GUESS (captured in arrow cluster)
+    "down":         0x17,   # GUESS
+    "left":         0x18,   # GUESS
+    "right":        0x19,   # GUESS
+    "ok":           0x15,   # CONFIRMED
+    "back":         0x2D,   # GUESS (captured twice in a row)
+    "home":         0x30,   # UNVERIFIED
+    "menu":         0x40,   # UNVERIFIED
 
     # ── Numeric pad ────────────────────────────────────────────────────
-    "0":            0xC0,
-    "1":            0x18,
-    "2":            0x98,
-    "3":            0x58,
-    "4":            0xD8,
-    "5":            0x38,
-    "6":            0xB8,
-    "7":            0x78,
-    "8":            0xF8,
-    "9":            0x08,
+    "0":            0xC0,   # UNVERIFIED
+    "1":            0x18,   # UNVERIFIED
+    "2":            0x98,   # UNVERIFIED
+    "3":            0x58,   # UNVERIFIED
+    "4":            0xD8,   # UNVERIFIED
+    "5":            0x38,   # UNVERIFIED
+    "6":            0xB8,   # UNVERIFIED
+    "7":            0x78,   # UNVERIFIED
+    "8":            0xF8,   # UNVERIFIED
+    "9":            0x08,   # UNVERIFIED
 
     # ── Streaming shortcuts ─────────────────────────────────────────────
-    # Verified on Hisense EN2A27H-class remotes:
-    "netflix":      0x1E,
-    "amazon":       0x4E,
-    "youtube":      0x2E,
-
-    # !! UNVERIFIED — placeholder codes !!
-    # The original Hisense remote rarely has hard buttons for these apps.
-    # If they don't launch the app, capture the real code with a phone
-    # camera + IR learner app and update the byte below.
-    # Alternative: change the GUI handler to send Home → arrow keys → OK
-    # to navigate to the app tile instead of a single IR shot.
-    "itvx":         0x5E,
-    "iplayer":      0x6E,
-    "nowtv":        0x7E,
-    "freely":       0x8E,
-    "spotify":      0x9E,
+    # Netflix goes through SPECIAL above (different protocol).
+    # Prime/YouTube/etc still UNVERIFIED — recapture before use.
+    "netflix":      0x56,   # CONFIRMED (overridden by SPECIAL: NEC1 addr=0x04)
+    "amazon":       0x4E,   # UNVERIFIED
+    "youtube":      0x2E,   # UNVERIFIED
+    "itvx":         0x5E,   # UNVERIFIED
+    "iplayer":      0x6E,   # UNVERIFIED
+    "nowtv":        0x7E,   # UNVERIFIED
+    "freely":       0x8E,   # UNVERIFIED
+    "spotify":      0x9E,   # UNVERIFIED
 }
 
 # Buttons that support NEC repeat frames when held
@@ -89,6 +88,10 @@ REPEATABLE: set[str] = {
 
 def get_command(name: str) -> dict | None:
     """Return a ready-to-queue command dict for a named button, or None."""
+    if name in SPECIAL:
+        cmd_def = dict(SPECIAL[name])
+        cmd_def["repeatable"] = name in REPEATABLE
+        return cmd_def
     cmd = HISENSE_COMMANDS.get(name)
     if cmd is None:
         return None
@@ -102,13 +105,23 @@ def get_command(name: str) -> dict | None:
 
 def all_buttons() -> list[dict]:
     """Return metadata for all buttons (used by the web GUI)."""
-    return [
-        {
-            "name":       name,
-            "command":    cmd,
-            "address":    HISENSE_ADDRESS,
-            "protocol":   "nec",
-            "repeatable": name in REPEATABLE,
-        }
-        for name, cmd in HISENSE_COMMANDS.items()
-    ]
+    out = []
+    for name, cmd in HISENSE_COMMANDS.items():
+        if name in SPECIAL:
+            sp = SPECIAL[name]
+            out.append({
+                "name":       name,
+                "command":    sp["command"],
+                "address":    sp["address"],
+                "protocol":   sp["protocol"],
+                "repeatable": name in REPEATABLE,
+            })
+        else:
+            out.append({
+                "name":       name,
+                "command":    cmd,
+                "address":    HISENSE_ADDRESS,
+                "protocol":   "nec",
+                "repeatable": name in REPEATABLE,
+            })
+    return out

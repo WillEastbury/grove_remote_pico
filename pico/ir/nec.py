@@ -41,7 +41,9 @@ class NECSender:
         """Send one (or more) NEC frames separated by the standard 108 ms gap.
 
         Args:
-            address:  8-bit device address (e.g. 0x40 for Hisense)
+            address:  device address.  If ≤ 0xFF, NEC1 frame (addr | ~addr | cmd | ~cmd).
+                      If > 0xFF, NEC-extended frame (addr_low | addr_high | cmd | ~cmd).
+                      For Hisense A6N TVs use 0x00BF.
             command:  8-bit command byte
             repeats:  how many full frames to send (for held buttons use send_repeat)
         """
@@ -53,13 +55,24 @@ class NECSender:
                 self._tx.space(41000)
 
     def _send_frame(self, address: int, command: int):
-        # Build 32-bit NEC word LSB-first: [addr][~addr][cmd][~cmd]
-        data = (
-            (address  & 0xFF)        |
-            ((~address & 0xFF) << 8) |
-            ((command  & 0xFF) << 16)|
-            ((~command & 0xFF) << 24)
-        )
+        if address > 0xFF:
+            # NECx: 16-bit address split into low/high bytes (LSB-first), cmd, ~cmd
+            addr_low  = address & 0xFF
+            addr_high = (address >> 8) & 0xFF
+            data = (
+                addr_low                  |
+                (addr_high       << 8)    |
+                ((command & 0xFF) << 16)  |
+                ((~command & 0xFF) << 24)
+            )
+        else:
+            # NEC1: address, ~address, command, ~command
+            data = (
+                (address  & 0xFF)        |
+                ((~address & 0xFF) << 8) |
+                ((command  & 0xFF) << 16)|
+                ((~command & 0xFF) << 24)
+            )
         self._tx.mark(_HEAD_MARK)
         self._tx.space(_HEAD_SPACE)
         for bit in range(32):
