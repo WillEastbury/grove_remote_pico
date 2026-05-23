@@ -454,7 +454,17 @@
 
       <hr class="status-divider" />
 
-      <div class="status-title">Recent commands</div>
+      <div class="status-title">Address sweep (debug)</div>
+      <div style="font-size:0.8em;color:#888;margin-bottom:6px">
+        Fires power-toggle at every NEC address.  Watch the TV — note when it
+        reacts and which address byte was sent.
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <input id="sweep-cmd" type="text" value="0x12" style="width:60px;padding:4px;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:4px"/>
+        <button id="sweep-btn" style="padding:6px 12px;background:#e67e22;color:#000;border:none;border-radius:4px;cursor:pointer">Sweep 0x00–0xFF</button>
+      </div>
+
+      <hr class="status-divider" />
       <ul class="history-list" id="history-list">
         <li class="history-empty">No commands yet</li>
       </ul>
@@ -645,6 +655,34 @@
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && _modalOpen) closeStatusModal();
+    });
+
+    document.getElementById('sweep-btn').addEventListener('click', async () => {
+      const token = loadToken();
+      if (!token) { location.reload(); return; }
+      const raw = document.getElementById('sweep-cmd').value.trim();
+      const command = parseInt(raw, raw.toLowerCase().startsWith('0x') ? 16 : 10);
+      if (isNaN(command) || command < 0 || command > 255) {
+        showToast('Command must be 0x00–0xFF', true);
+        return;
+      }
+      if (!confirm(`Fire ${command.toString(16)} at addresses 0x00–0xFF (256 frames)?`)) return;
+      try {
+        const res = await fetch('/api/command/sweep', {
+          method:  'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ command }),
+        });
+        if (!res.ok) {
+          showToast(`Sweep error ${res.status}`, true);
+          return;
+        }
+        const j = await res.json();
+        showToast(`Sweep queued: ${j.queued} frames`);
+        refreshStatus();
+      } catch (err) {
+        showToast(`Network error: ${err.message}`, true);
+      }
     });
   });
 

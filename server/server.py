@@ -211,6 +211,43 @@ async def send_raw(request: Request, _user: dict = Depends(_require_user)):
     return {"id": cmd_id, "status": "queued"}
 
 
+@app.post("/api/command/sweep", status_code=202)
+async def send_sweep(request: Request, _user: dict = Depends(_require_user)):
+    """Queue an address-sweep:  same command byte at every NEC address 0x00..0xFF.
+
+    Use this to find your TV's address when nothing else works.  Watch the TV
+    while the queue drains — when it reacts, note the index (the address that
+    triggered it).
+
+    Body:  { "command": int (default 0x12),  "start": int (default 0),
+             "end": int (default 256), "step": int (default 1) }
+    """
+    body = await request.json() if await request.body() else {}
+    command = int(body.get("command", 0x12))
+    start   = int(body.get("start", 0))
+    end     = int(body.get("end", 256))
+    step    = int(body.get("step", 1))
+
+    ids = []
+    for addr in range(start, end, step):
+        cmd_id = str(uuid.uuid4())
+        cmd = {
+            "id":        cmd_id,
+            "name":      f"sweep addr=0x{addr:02X} cmd=0x{command:02X}",
+            "protocol":  "nec",
+            "address":   addr,
+            "command":   command,
+            "repeats":   0,
+            "status":    "queued",
+            "queued_at": datetime.now(tz=timezone.utc).isoformat(),
+            "queued_by": _user["sub"],
+        }
+        _queue.append(cmd)
+        _history[cmd_id] = cmd
+        ids.append(cmd_id)
+    return {"queued": len(ids), "command": command, "range": [start, end, step]}
+
+
 @app.get("/api/status")
 async def queue_status(_user: dict = Depends(_require_user)):
     return {

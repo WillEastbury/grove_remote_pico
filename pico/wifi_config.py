@@ -1,15 +1,24 @@
 # WiFi and server configuration for the Pico 2 W IR client.
 # Copy this file to wifi_config.py and fill in your values before flashing.
 
-SSID     = "YOUR_WIFI_SSID"
-PASSWORD = "YOUR_WIFI_PASSWORD"
+SSID     = "Puddles-Mesh"
+PASSWORD = "Whatever1"
 
-# IP or hostname of the machine running server/server.py
-SERVER_URL = "http://192.168.1.100:8000"
+STATIC_IP      = "192.168.97.101"
+STATIC_MASK    = "255.255.0.0"
+STATIC_GW      = "192.168.0.1"
+STATIC_DNS     = "8.8.8.8"
 
-# Must match PICO_DEVICE_TOKEN in server/.env
-DEVICE_TOKEN = "CHANGE_ME_PICO_TOKEN"
+SERVER_URL = "https://homeremote.wavefunctionlabs.com"
+# Optional: pre-resolved IP for SERVER_URL to skip MicroPython's broken
+# getaddrinfo() on RP2350 v1.28.  If unset, client.py does its own UDP DNS
+# lookup against STATIC_DNS at startup.
+SERVER_IP  = "20.26.28.132"
 
-# Polling intervals in milliseconds
-POLL_INTERVAL_MS  = 200    # while active (recent command within last 5 polls)
-IDLE_INTERVAL_MS  = 1000   # when queue appears empty
+# Alias used by client.py's DNS fallback
+DNS        = STATIC_DNS
+
+DEVICE_TOKEN = "f80220a43fa69c6995bc34927631c9d5"
+
+POLL_INTERVAL_MS  = 200
+IDLE_INTERVAL_MS  = 1000

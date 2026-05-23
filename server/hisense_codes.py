@@ -1,7 +1,8 @@
 """
 Hisense TV NEC IR code table.
 
-Protocol:  NEC (38 kHz), address byte 0x40 (~address = 0xBF, verified).
+Protocol:  NEC (38 kHz), address byte 0x00 (~address = 0xFF) for A6N/A6NTUK
+(2023+ UK Hisense). Older Smart TVs (EN2A27H etc) use 0x40 (~0xBF).
 NEC frame: address(8) | ~address(8) | command(8) | ~command(8), LSB-first.
 
 !! MODEL-SPECIFIC DISCLAIMER !!
@@ -15,13 +16,18 @@ They may not work on all Hisense models.  If a button does not respond:
      exact model number.
 """
 
-HISENSE_ADDRESS = 0x40   # NEC device address for Hisense TVs
+HISENSE_ADDRESS = 0x00   # NEC device address for Hisense A6N/A6NTUK
+                         # Use 0x40 instead for older Hisense EN2A27H-class remotes.
+
+# Power command differs per generation:
+#   A6N / A6NTUK (2023+): 0x12
+#   EN2A27H older:        0x48
 
 # Map of button name → NEC command byte.
 # Each command byte is unique within this table.
 HISENSE_COMMANDS: dict[str, int] = {
     # ── Power / system ─────────────────────────────────────────────────
-    "power":        0x48,
+    "power":        0x12,
     "mute":         0xF0,
     "source":       0xD0,
 
