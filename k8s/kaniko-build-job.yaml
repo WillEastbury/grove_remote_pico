@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  # Use: kubectl create job build-001 --from=job/kaniko-build -n ir-remote
+  # Or re-apply this file with a new name each time
+  name: kaniko-build
+  namespace: ir-remote
+spec:
+  ttlSecondsAfterFinished: 600   # auto-clean after 10 min
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: kaniko
+          image: gcr.io/kaniko-project/executor:latest
+          args:
+            - "--context=git://github.com/WillEastbury/grove_remote_pico"
+            - "--context-sub-path=server"
+            - "--dockerfile=Dockerfile"
+            - "--destination=tileforgeacr.azurecr.io/ir-remote:latest"
+            - "--cache=true"
+            - "--cache-repo=tileforgeacr.azurecr.io/ir-remote/cache"
+            - "--snapshot-mode=redo"
+          volumeMounts:
+            - name: docker-config
+              mountPath: /kaniko/.docker
+      volumes:
+        - name: docker-config
+          secret:
+            secretName: kaniko-acr-secret
+            items:
+              - key: config.json
+                path: config.json

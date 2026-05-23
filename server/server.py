@@ -64,6 +64,29 @@ oauth.register(
 
 _queue:   deque[dict]   = deque()
 _history: dict[str, dict] = {}
+_pico_state: dict = {"last_seen": None}   # ISO-8601 UTC of last Pico contact
+
+_PICO_ONLINE_WINDOW_SECONDS = 10  # treat Pico as offline if no poll within this window
+
+
+def _touch_pico() -> None:
+    _pico_state["last_seen"] = datetime.now(tz=timezone.utc).isoformat()
+
+
+def _pico_status() -> dict:
+    last = _pico_state["last_seen"]
+    if last is None:
+        return {"connected": False, "last_seen": None, "seconds_since": None}
+    try:
+        last_dt = datetime.fromisoformat(last)
+    except ValueError:
+        return {"connected": False, "last_seen": last, "seconds_since": None}
+    delta = (datetime.now(tz=timezone.utc) - last_dt).total_seconds()
+    return {
+        "connected":     delta <= _PICO_ONLINE_WINDOW_SECONDS,
+        "last_seen":     last,
+        "seconds_since": round(delta, 1),
+    }
 
 # ── JWT helpers ───────────────────────────────────────────────────────────────
 
@@ -149,8 +172,10 @@ async def send_button(name: str, _user: dict = Depends(_require_user)):
 
     cmd_id = str(uuid.uuid4())
     cmd = {
-        "id":       cmd_id,
-        "status":   "queued",
+        "id":        cmd_id,
+        "name":      name,
+        "status":    "queued",
+        "queued_at": datetime.now(tz=timezone.utc).isoformat(),
         "queued_by": _user["sub"],
         **cmd_def,
     }
@@ -175,7 +200,9 @@ async def send_raw(request: Request, _user: dict = Depends(_require_user)):
     cmd_id = str(uuid.uuid4())
     cmd = {
         "id":        cmd_id,
+        "name":      body.get("name", "raw"),
         "status":    "queued",
+        "queued_at": datetime.now(tz=timezone.utc).isoformat(),
         "queued_by": _user["sub"],
         **body,
     }
@@ -188,7 +215,8 @@ async def send_raw(request: Request, _user: dict = Depends(_require_user)):
 async def queue_status(_user: dict = Depends(_require_user)):
     return {
         "queued":  len(_queue),
-        "history": list(_history.values())[-20:],
+        "history": list(_history.values())[-10:][::-1],   # newest first, max 10
+        "pico":    _pico_status(),
     }
 
 # ── Pico device API ───────────────────────────────────────────────────────────
@@ -196,6 +224,7 @@ async def queue_status(_user: dict = Depends(_require_user)):
 @app.get("/api/next-command")
 async def next_command(_auth: bool = Depends(_require_pico)):
     """Dequeue and return the next pending command, or null if the queue is empty."""
+    _touch_pico()
     if _queue:
         cmd = _queue.popleft()
         cmd["status"] = "sent"
@@ -206,9 +235,11 @@ async def next_command(_auth: bool = Depends(_require_pico)):
 @app.post("/api/ack/{cmd_id}")
 async def ack_command(cmd_id: str, request: Request, _auth: bool = Depends(_require_pico)):
     """Mark a command as transmitted by the Pico."""
+    _touch_pico()
     body = await request.json()
     if cmd_id in _history:
-        _history[cmd_id]["status"] = body.get("status", "transmitted")
+        _history[cmd_id]["status"]   = body.get("status", "transmitted")
+        _history[cmd_id]["sent_at"]  = datetime.now(tz=timezone.utc).isoformat()
     return {"ok": True}
 
 # ── Static / SPA ──────────────────────────────────────────────────────────────

@@ -156,6 +156,89 @@
     }
     .user-badge span { color: #aaa; }
 
+    /* ── Status panel ─────────────────────────────────────────────── */
+    .status-panel {
+      width: 280px;
+      background: #1a1a1a;
+      border-radius: 16px;
+      padding: 12px 16px;
+      box-shadow: inset 0 1px 0 #ffffff10;
+      font-size: 0.78rem;
+      color: #bbb;
+    }
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+    }
+    .led {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: #444;
+      box-shadow: 0 0 4px #0006 inset;
+      flex-shrink: 0;
+    }
+    .led.on  { background: #27ae60; box-shadow: 0 0 6px #27ae60aa; }
+    .led.off { background: #c0392b; box-shadow: 0 0 6px #c0392baa; }
+    .status-row .label { color: #888; }
+    .status-row .value { color: #ddd; margin-left: auto; font-variant-numeric: tabular-nums; }
+
+    .status-divider {
+      border: none;
+      border-top: 1px solid #2a2a2a;
+      margin: 8px 0 6px;
+    }
+    .status-title {
+      font-size: 0.68rem;
+      letter-spacing: 1px;
+      color: #666;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .history-list {
+      list-style: none;
+      max-height: 220px;
+      overflow-y: auto;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.72rem;
+    }
+    .history-list li {
+      display: grid;
+      grid-template-columns: 56px 1fr auto;
+      gap: 6px;
+      padding: 3px 0;
+      border-bottom: 1px solid #ffffff08;
+      align-items: baseline;
+    }
+    .history-list li:last-child { border-bottom: none; }
+    .h-time  { color: #666; }
+    .h-name  { color: #e8e8e8; }
+    .h-code  { color: #7fb0ff; }
+    .h-proto {
+      color: #888;
+      background: #ffffff10;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .h-proto.nec  { color: #ffc857; }
+    .h-proto.rc5  { color: #b5e48c; }
+    .h-proto.sony { color: #ff8fab; }
+    .history-empty { color: #555; text-align: center; padding: 8px 0; font-style: italic; }
+
+    .h-status {
+      grid-column: 1 / -1;
+      font-size: 0.65rem;
+      color: #555;
+      padding-left: 62px;
+    }
+    .h-status.transmitted { color: #27ae60; }
+    .h-status.queued      { color: #f39c12; }
+    .h-status.sent        { color: #3498db; }
+
     /* ── Toast ────────────────────────────────────────────────────── */
     #toast {
       position: fixed;
@@ -256,6 +339,26 @@
     <div class="row"><button class="btn small" data-cmd="7">7</button><button class="btn small" data-cmd="8">8</button><button class="btn small" data-cmd="9">9</button></div>
     <div class="row"><div style="width:42px"></div><button class="btn small" data-cmd="0">0</button><div style="width:42px"></div></div>
   </div>
+
+  <!-- ── Status panel ──────────────────────────────────────────────── -->
+  <div class="status-panel">
+    <div class="status-row">
+      <span class="led" id="pico-led"></span>
+      <span class="label">Remote</span>
+      <span class="value" id="pico-state">checking…</span>
+    </div>
+    <div class="status-row">
+      <span class="label" style="margin-left:17px">Last poll</span>
+      <span class="value" id="pico-last">—</span>
+    </div>
+
+    <hr class="status-divider" />
+
+    <div class="status-title">Recent commands</div>
+    <ul class="history-list" id="history-list">
+      <li class="history-empty">No commands yet</li>
+    </ul>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -315,6 +418,94 @@
     const rs = document.getElementById('remote-screen');
     rs.style.display = 'flex';
     document.getElementById('user-email').textContent = parseEmailFromJwt(token);
+    startStatusPolling();
+  }
+
+  // ── Status panel polling ────────────────────────────────────────────
+  let _statusTimer = null;
+
+  function fmtAgo(seconds) {
+    if (seconds == null) return 'never';
+    if (seconds < 1)     return 'just now';
+    if (seconds < 60)    return `${Math.floor(seconds)}s ago`;
+    if (seconds < 3600)  return `${Math.floor(seconds/60)}m ${Math.floor(seconds%60)}s ago`;
+    return `${Math.floor(seconds/3600)}h ago`;
+  }
+
+  function fmtCode(item) {
+    const p = (item.protocol || '').toLowerCase();
+    if (p === 'nec' || p === 'rc5') {
+      const addr = item.address  ?? 0;
+      const cmd  = item.command  ?? 0;
+      return `0x${addr.toString(16).padStart(2,'0').toUpperCase()}:0x${cmd.toString(16).padStart(2,'0').toUpperCase()}`;
+    }
+    if (p === 'sony') {
+      return `0x${(item.data ?? 0).toString(16).toUpperCase()} (${item.bits ?? '?'}b)`;
+    }
+    return '—';
+  }
+
+  function fmtTime(iso) {
+    if (!iso) return '--:--:--';
+    const d = new Date(iso);
+    return d.toLocaleTimeString('en-GB', { hour12: false });
+  }
+
+  async function refreshStatus() {
+    const token = loadToken();
+    if (!token) return;
+    try {
+      const res = await fetch('/api/status', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+
+      // Pico status
+      const pico = data.pico || {};
+      const led  = document.getElementById('pico-led');
+      const state= document.getElementById('pico-state');
+      const last = document.getElementById('pico-last');
+
+      if (pico.connected) {
+        led.className = 'led on';
+        state.textContent = 'connected';
+        state.style.color = '#7fdca0';
+      } else if (pico.last_seen) {
+        led.className = 'led off';
+        state.textContent = 'offline';
+        state.style.color = '#ff8a80';
+      } else {
+        led.className = 'led';
+        state.textContent = 'never seen';
+        state.style.color = '#888';
+      }
+      last.textContent = fmtAgo(pico.seconds_since);
+
+      // History
+      const ul = document.getElementById('history-list');
+      const hist = data.history || [];
+      if (hist.length === 0) {
+        ul.innerHTML = '<li class="history-empty">No commands yet</li>';
+        return;
+      }
+      ul.innerHTML = hist.map(h => `
+        <li>
+          <span class="h-time">${fmtTime(h.queued_at)}</span>
+          <span class="h-name">${h.name || '?'}</span>
+          <span class="h-proto ${(h.protocol||'').toLowerCase()}">${h.protocol || '?'}</span>
+          <span class="h-status ${h.status||''}">${fmtCode(h)} · ${h.status||'queued'}</span>
+        </li>
+      `).join('');
+    } catch (err) {
+      // Silent — polling will retry
+    }
+  }
+
+  function startStatusPolling() {
+    if (_statusTimer) return;
+    refreshStatus();
+    _statusTimer = setInterval(refreshStatus, 2000);
   }
 
   // ── Button click handler ────────────────────────────────────────────
@@ -348,6 +539,7 @@
       btn.classList.add('sent');
       setTimeout(() => btn.classList.remove('sent'), 300);
       showToast(`Sent: ${cmd}`);
+      refreshStatus();
     } catch (err) {
       showToast(`Network error: ${err.message}`, true);
     }
