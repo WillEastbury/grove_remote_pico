@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ir-remote-server
+  namespace: ir-remote
+  labels:
+    app: ir-remote-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ir-remote-server
+  template:
+    metadata:
+      labels:
+        app: ir-remote-server
+    spec:
+      containers:
+        - name: ir-remote-server
+          image: tileforgeacr.azurecr.io/grove-ir-remote:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: ir-remote-secrets
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi

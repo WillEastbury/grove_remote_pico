@@ -129,6 +129,11 @@ async def auth_callback(request: Request):
 
 # ── User API ──────────────────────────────────────────────────────────────────
 
+@app.get("/healthz")
+async def healthz():
+    return {"ok": True}
+
+
 @app.get("/api/buttons")
 async def list_buttons(_user: dict = Depends(_require_user)):
     """Return all Hisense button definitions."""
