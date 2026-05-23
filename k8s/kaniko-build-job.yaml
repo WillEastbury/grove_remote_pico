@@ -18,9 +18,9 @@ spec:
             - "--context=git://github.com/WillEastbury/grove_remote_pico"
             - "--context-sub-path=server"
             - "--dockerfile=Dockerfile"
-            - "--destination=tileforgeacr.azurecr.io/ir-remote:latest"
+            - "--destination=tileforgeacr.azurecr.io/grove-ir-remote:latest"
             - "--cache=true"
-            - "--cache-repo=tileforgeacr.azurecr.io/ir-remote/cache"
+            - "--cache-repo=tileforgeacr.azurecr.io/grove-ir-remote/cache"
             - "--snapshot-mode=redo"
           volumeMounts:
             - name: docker-config
