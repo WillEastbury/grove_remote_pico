@@ -14,8 +14,11 @@ If a button does not respond, recapture it:
 and update the command byte below.
 """
 
-# NECx 16-bit address used by all Hisense buttons except branded app launchers
-HISENSE_ADDRESS = 0x00BF
+# NECx 16-bit address used by all Hisense buttons except branded app launchers.
+# Stored as (addr_high << 8) | addr_low so it's a single int > 0xFF, which
+# triggers the NEC-extended code path in the encoder.
+# Captured frame bytes were: 00 BF cc ~cc  →  addr_low=0x00, addr_high=0xBF
+HISENSE_ADDRESS = 0xBF00
 
 # Some app-launch buttons on a Hisense remote actually emit a totally different
 # protocol/address pair (so they can talk to the smart hub regardless of TV
