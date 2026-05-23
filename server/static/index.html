@@ -525,8 +525,8 @@
   })();
 
   // ── Status panel state (declared early to avoid TDZ from boot()) ────
-  let _statusTimer = null;
-  let _modalOpen   = false;
+  var _statusTimer = null;
+  var _modalOpen   = false;
 
   function showRemote(token) {
     document.getElementById('login-screen').style.display = 'none';

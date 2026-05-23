@@ -285,6 +285,16 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
+async def root():
+    with open(os.path.join(os.path.dirname(__file__), "static", "index.html")) as fh:
+        return HTMLResponse(
+            fh.read(),
+            headers={
+                "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+                "Pragma":        "no-cache",
+                "Expires":       "0",
+            },
+        )
 async def serve_gui():
     with open(os.path.join(os.path.dirname(__file__), "static", "index.html")) as fh:
         return HTMLResponse(fh.read())
