@@ -144,14 +144,22 @@
     .stream-btn.netflix { background: #e50914; color: #fff; }
     .stream-btn.amazon  { background: #ff9900; color: #111; }
     .stream-btn.youtube { background: #ff0000; color: #fff; }
-    .stream-btn.itvx    { background: #f8c100; color: #111; }
-    .stream-btn.iplayer { background: #ec1e3e; color: #fff; }
+    .stream-btn.disney  { background: #113ccf; color: #fff; }
+    .stream-btn.vidaa   { background: #00a8a8; color: #001616; }
     .stream-btn.nowtv   { background: #00deb6; color: #001a14; }
     .stream-btn.freely  { background: #5e60ce; color: #fff; }
-    .stream-btn.spotify { background: #1db954; color: #000; }
+    .stream-btn.apps    { background: #444; color: #fff; }
+    .stream-btn.heart   { background: #d63384; color: #fff; }
+    .stream-btn.kid     { background: #ffd43b; color: #111; }
+    .stream-btn.rakuten { background: #b00020; color: #fff; }
 
     /* ── Divider ──────────────────────────────────────────────────── */
     .divider { border: none; border-top: 1px solid #2e2e2e; margin: 2px 0; }
+
+    .colour-btn.red    { background: #c0392b; }
+    .colour-btn.green  { background: #27ae60; }
+    .colour-btn.yellow { background: #f1c40f; color: #111; }
+    .colour-btn.blue   { background: #1a6db5; }
 
     /* ── User badge ───────────────────────────────────────────────── */
     .user-badge {
@@ -372,21 +380,27 @@
     <!-- Row 2a: Streaming shortcuts -->
     <div class="stream-row">
       <button class="stream-btn netflix" data-cmd="netflix">NETFLIX</button>
-      <button class="stream-btn amazon"  data-cmd="amazon">prime</button>
+      <button class="stream-btn amazon"  data-cmd="prime">prime</button>
       <button class="stream-btn youtube" data-cmd="youtube">▶ YouTube</button>
     </div>
 
     <!-- Row 2b: UK streaming shortcuts -->
     <div class="stream-row">
-      <button class="stream-btn itvx"    data-cmd="itvx">ITVX</button>
-      <button class="stream-btn iplayer" data-cmd="iplayer">iPlayer</button>
+      <button class="stream-btn disney"  data-cmd="disney">Disney+</button>
       <button class="stream-btn nowtv"   data-cmd="nowtv">NOW</button>
+      <button class="stream-btn freely"  data-cmd="freely">Freely</button>
     </div>
 
     <!-- Row 2c: Other launchers -->
     <div class="stream-row">
-      <button class="stream-btn freely"  data-cmd="freely">Freely</button>
-      <button class="stream-btn spotify" data-cmd="spotify">♪ Spotify</button>
+      <button class="stream-btn vidaa"   data-cmd="vidaa">VIDAA</button>
+      <button class="stream-btn apps"    data-cmd="apps">Apps</button>
+      <button class="stream-btn heart"   data-cmd="heart">♥ Fav</button>
+    </div>
+
+    <div class="stream-row">
+      <button class="stream-btn kid"     data-cmd="kid">KID</button>
+      <button class="stream-btn rakuten" data-cmd="rakuten">Rakuten</button>
     </div>
 
     <hr class="divider" />
@@ -418,11 +432,32 @@
       <div></div>
     </div>
 
-    <!-- Row 5: Back / Home / Menu -->
+    <!-- Row 5: Back / Home / Menu / Exit -->
     <div class="row">
       <button class="btn small dark" data-cmd="back">⬅</button>
       <button class="btn small dark" data-cmd="home">⌂</button>
       <button class="btn small dark" data-cmd="menu">☰</button>
+      <button class="btn small dark" data-cmd="exit">Exit</button>
+    </div>
+
+    <div class="row">
+      <button class="btn small dark" data-cmd="info">Info</button>
+      <button class="btn small dark" data-cmd="guide">Guide</button>
+      <button class="btn small dark" data-cmd="chlist">List</button>
+    </div>
+
+    <div class="row">
+      <button class="btn small dark" data-cmd="play">Play</button>
+      <button class="btn small dark" data-cmd="pause">Pause</button>
+      <button class="btn small dark" data-cmd="subtitle">Sub</button>
+      <button class="btn small dark" data-cmd="voice">Voice</button>
+    </div>
+
+    <div class="row">
+      <button class="btn small colour-btn red" data-cmd="red">R</button>
+      <button class="btn small colour-btn green" data-cmd="green">G</button>
+      <button class="btn small colour-btn yellow" data-cmd="yellow">Y</button>
+      <button class="btn small colour-btn blue" data-cmd="blue">B</button>
     </div>
 
     <hr class="divider" />
